@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>semana2_service</name>
+  <version>0.0.1</version>
+  <description>Custom services and converter node (ROS1).</description>
+
+  <maintainer email="rodrigo.mc.olv@gmail.com">Rodrigo Oliveira</maintainer>
+  <license>Apache-2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Build-time for generating SRVs -->
+  <build_depend>message_generation</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <!-- <build_depend>geometry_msgs</build_depend> -->
+  <!-- <build_depend>sensor_msgs</build_depend> -->
+
+  <!-- Run-time deps (generated headers + node) -->
+  <exec_depend>message_runtime</exec_depend>
+  <exec_depend>roscpp</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+  <!-- <exec_depend>geometry_msgs</exec_depend> -->
+  <!-- <exec_depend>sensor_msgs</exec_depend> -->
+
+  <export/>
+</package>
