@@ -1,51 +1,51 @@
 #include <rclcpp/rclcpp.hpp>
 #include <cmath>
 
-#include "my_interfaces/srv/d2_r.hpp"
-#include "my_interfaces/srv/r2_d.hpp"
-#include "my_interfaces/srv/g2_ecef.hpp"
-#include "my_interfaces/srv/ecef2_g.hpp"
+#include "semana2_service/srv/d2_r.hpp"
+#include "semana2_service/srv/r2_d.hpp"
+#include "semana2_service/srv/g2_ecef.hpp"
+#include "semana2_service/srv/ecef2_g.hpp"
 
 using std::placeholders::_1;
 using std::placeholders::_2;
 
 class ConverterNode : public rclcpp::Node {
 public:
-    ConverterNode() : Node("my_interfaces_node") {
+    ConverterNode() : Node("semana2_service_node") {
         using namespace std::placeholders;
 
-        d2r_service_ = this->create_service<my_interfaces::srv::D2R>(
+        d2r_service_ = this->create_service<semana2_service::srv::D2R>(
             "d2r", std::bind(&ConverterNode::d2r_callback, this, _1, _2));
-        r2d_service_ = this->create_service<my_interfaces::srv::R2D>(
+        r2d_service_ = this->create_service<semana2_service::srv::R2D>(
             "r2d", std::bind(&ConverterNode::r2d_callback, this, _1, _2));
-        g2ecef_service_ = this->create_service<my_interfaces::srv::G2ECEF>(
+        g2ecef_service_ = this->create_service<semana2_service::srv::G2ECEF>(
             "g2ecef", std::bind(&ConverterNode::g2ecef_callback, this, _1, _2));
-        ecef2g_service_ = this->create_service<my_interfaces::srv::ECEF2G>(
+        ecef2g_service_ = this->create_service<semana2_service::srv::ECEF2G>(
             "ecef2g", std::bind(&ConverterNode::ecef2g_callback, this, _1, _2));
 
         RCLCPP_INFO(this->get_logger(), "UGV Coordinate Converter Service is up.");
     }
 private:
-    rclcpp::Service<my_interfaces::srv::D2R>::SharedPtr d2r_service_;
-    rclcpp::Service<my_interfaces::srv::R2D>::SharedPtr r2d_service_;
-    rclcpp::Service<my_interfaces::srv::G2ECEF>::SharedPtr g2ecef_service_;
-    rclcpp::Service<my_interfaces::srv::ECEF2G>::SharedPtr ecef2g_service_;
+    rclcpp::Service<semana2_service::srv::D2R>::SharedPtr d2r_service_;
+    rclcpp::Service<semana2_service::srv::R2D>::SharedPtr r2d_service_;
+    rclcpp::Service<semana2_service::srv::G2ECEF>::SharedPtr g2ecef_service_;
+    rclcpp::Service<semana2_service::srv::ECEF2G>::SharedPtr ecef2g_service_;
     void d2r_callback(
-        const std::shared_ptr<my_interfaces::srv::D2R::Request> request,
-        std::shared_ptr<my_interfaces::srv::D2R::Response> response) {
+        const std::shared_ptr<semana2_service::srv::D2R::Request> request,
+        std::shared_ptr<semana2_service::srv::D2R::Response> response) {
 
         response->radians = (request->degrees * M_PI)/180;
     }
  
     void r2d_callback(
-        const std::shared_ptr<my_interfaces::srv::R2D::Request> request,
-        std::shared_ptr<my_interfaces::srv::R2D::Response> response) {
+        const std::shared_ptr<semana2_service::srv::R2D::Request> request,
+        std::shared_ptr<semana2_service::srv::R2D::Response> response) {
         response->degrees = (request->radians*180)/M_PI;
     }
 
     void g2ecef_callback(
-      const std::shared_ptr<my_interfaces::srv::G2ECEF::Request> request,
-      std::shared_ptr<my_interfaces::srv::G2ECEF::Response> response) {
+      const std::shared_ptr<semana2_service::srv::G2ECEF::Request> request,
+      std::shared_ptr<semana2_service::srv::G2ECEF::Response> response) {
 
       const double a  = 6378137.0;                                   // semi-major axis [m]
       const double first_eccentricity = 6.6943799901413165e-3;       // first eccentricity squared
@@ -65,8 +65,8 @@ private:
       response->z = Z;
     }
     void ecef2g_callback(
-        const std::shared_ptr<my_interfaces::srv::ECEF2G::Request> request,
-        std::shared_ptr<my_interfaces::srv::ECEF2G::Response> response) {
+        const std::shared_ptr<semana2_service::srv::ECEF2G::Request> request,
+        std::shared_ptr<semana2_service::srv::ECEF2G::Response> response) {
             float X =    request -> x;
             float Y =    request -> y;
             float Z =    request -> z;

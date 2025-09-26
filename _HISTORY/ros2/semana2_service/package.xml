@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="3">
-  <name>my_interfaces</name>
+  <name>semana2_service</name>
   <version>0.0.1</version>
   <description>Custom service interfaces</description>
   <maintainer email="rodrigo.mc.olv@gmail.com">Rodrigo Oliveira</maintainer>
