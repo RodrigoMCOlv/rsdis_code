@@ -48,7 +48,7 @@ class Rover_Sensors : public rclcpp::Node{
       msg.humidity.relative_humidity=Humidity_Simulator();
       RCLCPP_INFO(
         this->get_logger(),
-        "Publishing rover_sensors:\n  Time: %d \n Temperature: %.2f \n GPS->   lat: %f   |   long: %f   |   alt: %f \n Relative Humidity: %.2f %\n",
+        "Publishing rover_sensors:\n  Time: %d \n Temperature: %.2f \n GPS->   lat: %f   |   long: %f   |   alt: %f \n Relative Humidity: %.2f %%\n",
         msg.header.stamp.sec ,msg.temperature.temperature, msg.gps.latitude,msg.gps.longitude, msg.gps.altitude, msg.humidity.relative_humidity
       );
 
