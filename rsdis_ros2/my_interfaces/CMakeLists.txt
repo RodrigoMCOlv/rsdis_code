@@ -1,31 +1,30 @@
 cmake_minimum_required(VERSION 3.8)
 project(my_interfaces)
 
-if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-  add_compile_options(-Wall -Wextra -Wpedantic)
-endif()
-
-# find dependencies
 find_package(ament_cmake REQUIRED)
-
 find_package(rosidl_default_generators REQUIRED)
+find_package(rclcpp REQUIRED)
 
+# Generate code for your services
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/AddTwoInts.srv"
+  "srv/D2R.srv"
+  "srv/R2D.srv"
+  "srv/G2ECEF.srv"
+  "srv/ECEF2G.srv"
 )
 
+add_executable(converter_service src/converter_service.cpp)
+ament_target_dependencies(converter_service rclcpp)
 
-if(BUILD_TESTING)
-  find_package(ament_lint_auto REQUIRED)
-  # the following line skips the linter which checks for copyrights
-  # comment the line when a copyright and license is added to all source files
-  set(ament_cmake_copyright_FOUND TRUE)
-  # the following line skips cpplint (only works in a git repo)
-  # comment the line when this package is in a git repo and when
-  # a copyright and license is added to all source files
-  set(ament_cmake_cpplint_FOUND TRUE)
-  ament_lint_auto_find_test_dependencies()
-endif()
+# Link against the C++ typesupport produced above
+rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(converter_service ${cpp_typesupport_target})
 
+# Install only real targets
+install(TARGETS converter_service
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# Export runtime deps so others can find your interfaces
 ament_export_dependencies(rosidl_default_runtime)
 ament_package()
