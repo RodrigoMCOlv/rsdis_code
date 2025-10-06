@@ -1,3 +1,7 @@
+//TO COMPILE
+//colcon build --symlink-install
+
+
 #include <algorithm>
 #include <chrono>
 #include <cmath>
