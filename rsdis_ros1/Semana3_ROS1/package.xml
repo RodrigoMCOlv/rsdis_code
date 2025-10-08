@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>Semana3_ROS1</name>
+  <version>0.0.0</version>
+  <description>ROS1 port of the Semana3 detection and control nodes.</description>
+
+  <maintainer email="todo@example.com">TODO</maintainer>
+  <license>TODO</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>roscpp</depend>
+  <depend>geometry_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>visualization_msgs</depend>
+
+  <build_depend>eigen</build_depend>
+  <exec_depend>eigen</exec_depend>
+</package>

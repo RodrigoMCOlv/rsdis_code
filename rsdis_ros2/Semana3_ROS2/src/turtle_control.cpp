@@ -20,13 +20,15 @@ class TurtleControl : public rclcpp::Node {
 public:
   TurtleControl()
   : Node("turtle_control"),
-    linear_speed_(declare_parameter("linear_speed", 0.5)),   // m/s
+    linear_speed_(declare_parameter("linear_speed", 0.3)),   // m/s
     angular_speed_(declare_parameter("angular_speed", 0.6)), // rad/s
-    bot_side_(declare_parameter("bot_side", 0.230)),         // m
-    safety_threshold_(declare_parameter("safety_threshold", 0.75)), // fraction of bot size
-    forward_arc_deg_(declare_parameter("forward_arc", 60.0)),      // degrees
-    left_arc_deg_(declare_parameter("left_arc", 15.0)),            // degrees
-    right_arc_deg_(declare_parameter("right_arc", 15.0)),          // degrees
+    bot_side_(declare_parameter("bot_side", 0.220)),         // m
+    safety_threshold_front_(declare_parameter("safety_threshold_front", 1.4)), // fraction of bot size
+    safety_threshold_side_(declare_parameter("safety_threshold_side", 1.6)), // fraction of bot size
+
+    forward_arc_deg_(declare_parameter("forward_arc", 40)),      // degrees
+    left_arc_deg_(declare_parameter("left_arc", 25.0)),            // degrees
+    right_arc_deg_(declare_parameter("right_arc", 25.0)),          // degrees
     rng_(std::random_device{}()),
     coin_(0, 1) // 0 or 1
   {
@@ -42,7 +44,7 @@ public:
   }
 
 private:
-  enum class State { Stopped, Forward, TurnRight, TurnLeft };
+  enum class State { Stopped, Forward, TurnRight, TurnLeft, TurnArround };
 
   // --- Laser callback ---
   void laserCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg) { latest_scan_ = msg; }
@@ -68,6 +70,7 @@ private:
       case State::Forward:   return "Forward";
       case State::TurnRight: return "TurnRight";
       case State::TurnLeft:  return "TurnLeft";
+      case State::TurnArround: return "TurnArround";    
     }
     return "Unknown";
   }
@@ -88,7 +91,9 @@ private:
         min_d = std::min(min_d, static_cast<double>(r));
       }
     }
-    const double thr = edgeThreshold(bot_side_, half, threshold);
+    //const double thr = edgeThreshold(bot_side_, half, threshold);
+    const double thr = bot_side_ * (0.5 + threshold);       //half of robot size + threshold
+    
     return min_d < thr;
   }
 
@@ -108,7 +113,9 @@ private:
         min_d = std::min(min_d, static_cast<double>(r));
       }
     }
-    const double thr = edgeThreshold(bot_side_, half + left, threshold);
+    //const double thr = edgeThreshold(bot_side_, half + left, threshold);
+    const double thr = bot_side_ * (0.5 + threshold);       //half of robot size + threshold
+    
     return min_d < thr;
   }
 
@@ -128,7 +135,8 @@ private:
         min_d = std::min(min_d, static_cast<double>(r));
       }
     }
-    const double thr = edgeThreshold(bot_side_, half + right, threshold);
+    //const double thr = edgeThreshold(bot_side_, half + right, threshold);
+    const double thr = bot_side_ * (0.5 + threshold);       //half of robot size + threshold
     return min_d < thr;
   }
 
@@ -140,29 +148,33 @@ private:
     switch (state_) {
       case State::Forward:
         // Stop if ANY obstacle is too close
-        if (obstacleAhead(safety_threshold_) ||
-            obstacleLeft(safety_threshold_) ||
-            obstacleRight(safety_threshold_)) {
+        if (obstacleAhead(safety_threshold_front_) ||
+            obstacleLeft(safety_threshold_side_) ||
+            obstacleRight(safety_threshold_side_)) {
           state_ = State::Stopped;
         }
         break;
 
       case State::Stopped:
-        if (obstacleAhead(safety_threshold_)) {
+        if (obstacleAhead(safety_threshold_front_)) {
           const int direction = coin_(rng_); // 0 or 1
           if (direction == 1) {
-            state_ = State::TurnRight;
+            state_ = State::TurnRight;   
             RCLCPP_INFO(this->get_logger(), "Wall AHEAD -> random says RIGHT");
           } else {
             state_ = State::TurnLeft;
             RCLCPP_INFO(this->get_logger(), "Wall AHEAD -> random says LEFT");
           }
-          turn_deadline_ = now_time + turn_duration_;
-        }else if (obstacleLeft(safety_threshold_)) {
+          turn_deadline_ = now_time + turn_duration_ *2;
+        }else if(obstacleLeft(safety_threshold_side_) && obstacleRight(safety_threshold_side_)){
+          state_= State::TurnArround;
+          turn_deadline_ = now_time + rclcpp::Duration::from_seconds(M_PI / std::abs(angular_speed_));
+          RCLCPP_INFO(this->get_logger(), "In a Corner -> Turning arround");
+        }else if (obstacleLeft(safety_threshold_side_)) {
           state_ = State::TurnRight;
           turn_deadline_ = now_time + turn_duration_;
           RCLCPP_INFO(this->get_logger(), "Obstacle LEFT -> turning RIGHT");
-        }else if (obstacleRight(safety_threshold_)) {
+        }else if (obstacleRight(safety_threshold_side_)) {
           state_ = State::TurnLeft;
           turn_deadline_ = now_time + turn_duration_;
           RCLCPP_INFO(this->get_logger(), "Obstacle RIGHT -> turning LEFT");
@@ -173,6 +185,7 @@ private:
 
       case State::TurnRight:
       case State::TurnLeft:
+      case State::TurnArround:
         if (now_time >= turn_deadline_) {
           state_ = State::Stopped; // re-evaluate environment after timed turn
         }
@@ -200,6 +213,9 @@ private:
         cmd.linear.x  = 0.0;
         cmd.angular.z = 0.0;
         break;
+      case State::TurnArround:
+        cmd.linear.x = 0.0;
+        cmd.angular.z = angular_speed_;
     }
 
     cmd_pub_->publish(cmd);
@@ -215,7 +231,8 @@ private:
   const double linear_speed_;
   const double angular_speed_;
   const double bot_side_;
-  const double safety_threshold_;
+  const double safety_threshold_front_;
+  const double safety_threshold_side_;  
   const double forward_arc_deg_;
   const double left_arc_deg_;
   const double right_arc_deg_;
